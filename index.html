@@ -33,12 +33,16 @@
   <script type="text/babel" src="contracts/UserAPI.js"></script>
   <script type="text/babel" src="contracts/RideAPI.js"></script>
   <script type="text/babel" src="contracts/AIAPI.js"></script>
+  <script type="text/babel" src="contracts/AuthAPI.js"></script>
+  <script type="text/babel" src="contracts/ProfileAPI.js"></script>
   
   <!-- Load components -->
   <script type="text/babel" src="components/LocationPicker.jsx"></script>
   <script type="text/babel" src="components/UserSwitcher.jsx"></script>
   <script type="text/babel" src="components/RideManager.jsx"></script>
   <script type="text/babel" src="components/RatingSystem.jsx"></script>
+  <script type="text/babel" src="components/AuthForms.jsx"></script>
+  <script type="text/babel" src="components/ProfileManager.jsx"></script>
   <script type="text/babel" src="App.jsx"></script>
   
   <!-- Main App -->
@@ -67,15 +71,113 @@
       console.log('MainApp component rendering...');
       
       const [currentUser, setCurrentUser] = useState(null);
+      const [isAuthenticated, setIsAuthenticated] = useState(false);
+      const [authMode, setAuthMode] = useState('login'); // 'login', 'register', 'forgot'
       const [activeTab, setActiveTab] = useState('search');
       const [showRatingSystem, setShowRatingSystem] = useState(false);
       const [selectedRideId, setSelectedRideId] = useState(null);
       const [error, setError] = useState(null);
+      const [isLoading, setIsLoading] = useState(true);
+
+      // Check authentication on load with better persistence
+      useEffect(() => {
+        const checkAuth = async () => {
+          try {
+            console.log('Checking authentication...');
+            
+            // Wait a bit for APIs to load
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            if (typeof AuthAPI === 'undefined' || typeof UserAPI === 'undefined') {
+              console.log('APIs not loaded yet, retrying...');
+              setTimeout(checkAuth, 500);
+              return;
+            }
+            
+            const isAuth = AuthAPI.isAuthenticated();
+            console.log('Authentication status:', isAuth);
+            setIsAuthenticated(isAuth);
+            
+            if (isAuth) {
+              const session = AuthAPI.getCurrentSession();
+              console.log('Current session:', session);
+              
+              if (session && session.userId) {
+                try {
+                  const user = await UserAPI.getUserById(session.userId);
+                  console.log('Loaded user:', user);
+                  if (user) {
+                    setCurrentUser(user);
+                    // Only set localStorage if it's different from current value
+                    const currentStoredUser = localStorage.getItem('current_user');
+                    if (currentStoredUser !== user.id) {
+                      localStorage.setItem('current_user', user.id);
+                    }
+                  }
+                } catch (error) {
+                  console.error('Error loading user:', error);
+                  // If user not found, clear invalid session
+                  AuthAPI.logout();
+                  setIsAuthenticated(false);
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error checking authentication:', error);
+          } finally {
+            setIsLoading(false);
+          }
+        };
+        
+        checkAuth();
+      }, []);
+
+      // Debug activeTab changes
+      useEffect(() => {
+        console.log('activeTab changed to:', activeTab);
+      }, [activeTab]);
+
+      const handleLoginSuccess = (user) => {
+        console.log('Login successful:', user);
+        setCurrentUser(user);
+        setIsAuthenticated(true);
+        setAuthMode('login');
+        setActiveTab('search');
+        // Ensure current_user is set in localStorage
+        localStorage.setItem('current_user', user.id);
+      };
+
+      const handleRegisterSuccess = (user) => {
+        console.log('Registration successful:', user);
+        setCurrentUser(user);
+        setIsAuthenticated(true);
+        setAuthMode('login');
+        setActiveTab('search');
+        // Ensure current_user is set in localStorage
+        localStorage.setItem('current_user', user.id);
+      };
+
+      const handleLogout = async () => {
+        try {
+          await AuthAPI.logout();
+          setCurrentUser(null);
+          setIsAuthenticated(false);
+          setActiveTab('search');
+          // Clear current_user from localStorage
+          localStorage.removeItem('current_user');
+        } catch (error) {
+          console.error('Error during logout:', error);
+          // Force logout even if API fails
+          setCurrentUser(null);
+          setIsAuthenticated(false);
+          localStorage.removeItem('current_user');
+        }
+      };
 
       const handleUserChange = (user) => {
         console.log('User changed:', user);
         setCurrentUser(user);
-        setActiveTab('search');
+        // Don't reset activeTab - let user stay on current tab
       };
 
       const handleShowRating = (rideId) => {
@@ -87,6 +189,7 @@
       const tabs = [
         { id: 'search', label: 'Search & Book', icon: '🔍' },
         { id: 'create', label: 'Create Ride', icon: '🚗' },
+        { id: 'profile', label: 'Profile', icon: '👤', hidden: !isAuthenticated },
         { id: 'rating', label: 'Rate Ride', icon: '⭐', hidden: !showRatingSystem }
       ];
 
@@ -101,6 +204,10 @@
           setError('RideManager component not loaded');
         } else if (typeof RatingSystem === 'undefined') {
           setError('RatingSystem component not loaded');
+        } else if (typeof LoginForm === 'undefined') {
+          setError('LoginForm component not loaded');
+        } else if (typeof ProfileManager === 'undefined') {
+          setError('ProfileManager component not loaded');
         } else {
           console.log('All components loaded successfully');
         }
@@ -123,6 +230,47 @@
         );
       }
 
+      // Show loading while checking authentication
+      if (isLoading) {
+        return (
+          <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Checking authentication...</p>
+            </div>
+          </div>
+        );
+      }
+
+      // Show authentication forms if not authenticated
+      if (!isAuthenticated) {
+        return (
+          <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+            <div className="w-full max-w-md">
+              {authMode === 'login' && (
+                <LoginForm 
+                  onLoginSuccess={handleLoginSuccess}
+                  onSwitchToRegister={() => setAuthMode('register')}
+                />
+              )}
+              
+              {authMode === 'register' && (
+                <RegisterForm 
+                  onRegisterSuccess={handleRegisterSuccess}
+                  onSwitchToLogin={() => setAuthMode('login')}
+                />
+              )}
+              
+              {authMode === 'forgot' && (
+                <ForgotPasswordForm 
+                  onBackToLogin={() => setAuthMode('login')}
+                />
+              )}
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div className="min-h-screen bg-gray-50">
           {/* Header */}
@@ -140,6 +288,14 @@
                       <p className="text-sm text-blue-200">{currentUser.role}</p>
                     </div>
                   )}
+                  {isAuthenticated && (
+                    <button
+                      onClick={handleLogout}
+                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm"
+                    >
+                      Sign Out
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -156,7 +312,11 @@
                   !tab.hidden && (
                     <button
                       key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
+                      onClick={() => {
+                        console.log('Tab clicked:', tab.id, 'Current activeTab:', activeTab);
+                        setActiveTab(tab.id);
+                        console.log('Setting activeTab to:', tab.id);
+                      }}
                       className={`flex-1 px-6 py-4 text-center font-medium transition-colors ${
                         activeTab === tab.id
                           ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
@@ -179,6 +339,13 @@
               
               {activeTab === 'create' && (
                 <RideManager />
+              )}
+              
+              {activeTab === 'profile' && isAuthenticated && (
+                <ProfileManager 
+                  userId={currentUser?.id}
+                  onLogout={handleLogout}
+                />
               )}
               
               {activeTab === 'rating' && showRatingSystem && (

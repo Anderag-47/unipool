@@ -1,0 +1,105 @@
+{
+  "users": [
+    {
+      "id": "u1",
+      "name": "Ali Khan",
+      "email": "ali@fccollege.edu.pk",
+      "role": "Driver",
+      "phone": "+92-300-1234567",
+      "studentId": "CS-2021-001",
+      "department": "Computer Science",
+      "year": "3rd Year",
+      "preferences": {
+        "notifications": true,
+        "autoBook": false,
+        "preferredPickup": "Gulberg",
+        "preferredDropoff": "FCC"
+      },
+      "ratings": { 
+        "driver": [
+          { "rating": 4.5, "raterId": "u2", "review": "Great driver, very punctual", "timestamp": "2024-01-15T10:30:00Z" },
+          { "rating": 5.0, "raterId": "u3", "review": "Excellent service", "timestamp": "2024-01-20T14:20:00Z" }
+        ], 
+        "rider": [] 
+      },
+      "rideHistory": [],
+      "createdAt": "2024-01-01T00:00:00Z",
+      "lastActive": "2024-01-25T08:30:00Z"
+    },
+    {
+      "id": "u2",
+      "name": "Sara Ahmed",
+      "email": "281131832@formanite.fccollege.edu.pk",
+      "role": "Rider",
+      "phone": "+92-301-9876543",
+      "studentId": "EE-2022-045",
+      "department": "Electrical Engineering",
+      "year": "2nd Year",
+      "preferences": {
+        "notifications": true,
+        "autoBook": true,
+        "preferredPickup": "Defence",
+        "preferredDropoff": "FCC"
+      },
+      "ratings": { 
+        "driver": [], 
+        "rider": [
+          { "rating": 4.0, "raterId": "u1", "review": "Good passenger", "timestamp": "2024-01-15T10:30:00Z" }
+        ] 
+      },
+      "rideHistory": [],
+      "createdAt": "2024-01-05T00:00:00Z",
+      "lastActive": "2024-01-25T09:15:00Z"
+    },
+    {
+      "id": "u3",
+      "name": "Ahmed Hassan",
+      "email": "ahmed@fccollege.edu.pk",
+      "role": "Driver",
+      "phone": "+92-302-5551234",
+      "studentId": "ME-2020-023",
+      "department": "Mechanical Engineering",
+      "year": "4th Year",
+      "preferences": {
+        "notifications": false,
+        "autoBook": false,
+        "preferredPickup": "Model Town",
+        "preferredDropoff": "FCC"
+      },
+      "ratings": { 
+        "driver": [
+          { "rating": 4.8, "raterId": "u2", "review": "Very reliable driver", "timestamp": "2024-01-20T14:20:00Z" }
+        ], 
+        "rider": [] 
+      },
+      "rideHistory": [],
+      "createdAt": "2023-12-15T00:00:00Z",
+      "lastActive": "2024-01-24T16:45:00Z"
+    },
+    {
+      "id": "u4",
+      "name": "Fatima Zahra",
+      "email": "202345678@formanite.fccollege.edu.pk",
+      "role": "Rider",
+      "phone": "+92-303-7778889",
+      "studentId": "BA-2023-012",
+      "department": "Business Administration",
+      "year": "1st Year",
+      "preferences": {
+        "notifications": true,
+        "autoBook": false,
+        "preferredPickup": "Johar Town",
+        "preferredDropoff": "FCC"
+      },
+      "ratings": { 
+        "driver": [], 
+        "rider": [] 
+      },
+      "rideHistory": [],
+      "createdAt": "2024-01-10T00:00:00Z",
+      "lastActive": "2024-01-25T07:20:00Z"
+    }
+  ],
+  "rides": [],
+  "bookings": []
+}
